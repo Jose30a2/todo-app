@@ -1,11 +1,15 @@
 // Importacion en crudo usando ?raw no importa el formato lo importa de todos modos
 import html from './app.html?raw';
 import todoStore from '../store/todo.store';
-import {renderTodos} from '../todos/models/use-cases';
+import {renderTodos, renderPending} from '../todos/models/use-cases';
+import { Filters } from '../store/todo.store';
 
 const elementIds = {
     todoList: '.todo-list',
     newTodoInput: '#new-todo-input', // Apuntado al id de la caja input
+    clearCompleted: '.clear-completed',
+    todoFilters: '.filtro',
+    pendingCountLabel: '#pending-count',
 }
 /**
  * 
@@ -17,7 +21,12 @@ export const App = (elementId) => {
         const todos = todoStore.getTodos(todoStore.getCurrentFilter());
         console.log(todos);
         renderTodos(elementIds.todoList, todos);
+        updatePendingCount();
     }
+
+    const updatePendingCount = () => {
+        renderPending(elementIds.pendingCountLabel);
+    };
 
 
     // Cuando la funcion App() se llama
@@ -31,6 +40,8 @@ export const App = (elementId) => {
     // Referencias HTML
     const newDescriptionInput = document.querySelector(elementIds.newTodoInput);
     const todoListUL = document.querySelector(elementIds.todoList);         // Referencia a la lista de todos
+    const clearCompletedButton = document.querySelector(elementIds.clearCompleted);
+    const filtersLIs = document.querySelectorAll(elementIds.todoFilters);
 
 
     // Listener
@@ -64,6 +75,34 @@ export const App = (elementId) => {
       
    
     });
+
+    clearCompletedButton.addEventListener('click', () => {
+       
+       todoStore.deleteCompleted();
+       displayTodos();
+       
+   
+    });
+
+    filtersLIs.forEach(element => {
+        element.addEventListener('click', (element) => {
+            filtersLIs.forEach( el => el.classList.remove('selected')); // Elimino class selected de todos
+            element.target.classList.add('selected');
+
+            switch(element.target.text){
+                case 'Todos':
+                    todoStore.setSelectedFilter(Filters.All);
+                    break;
+                case 'Completados':
+                    todoStore.setSelectedFilter(Filters.Completed);
+                    break;
+                 case 'Pendientes':
+                    todoStore.setSelectedFilter(Filters.Pending);
+                    break;
+            }
+            displayTodos();
+        })
+    })
 
 
 }
